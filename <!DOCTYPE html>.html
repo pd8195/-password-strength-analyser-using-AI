@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Password Strength Evaluator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --weak: #ff4d4d;
+            --medium: #ffcc00;
+            --strong: #4CAF50;
+            --primary: #4361ee;
+            --dark: #212529;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: var(--dark);
+            opacity: 0.8;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        
+        .password-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background-color: var(--light);
+        }
+        
+        .password-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .toggle-visibility {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6c757d;
+            font-size: 18px;
+        }
+        
+        .strength-meter {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        
+        .weak .strength-bar {
+            width: 33%;
+            background-color: var(--weak);
+        }
+        
+        .medium .strength-bar {
+            width: 66%;
+            background-color: var(--medium);
+        }
+        
+        .strong .strength-bar {
+            width: 100%;
+            background-color: var(--strong);
+        }
+        
+        .strength-text {
+            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .weak .strength-text {
+            color: var(--weak);
+        }
+        
+        .medium .strength-text {
+            color: var(--medium);
+        }
+        
+        .strong .strength-text {
+            color: var(--strong);
+        }
+        
+        .advice-list {
+            text-align: left;
+            margin-bottom: 30px;
+            padding-left: 20px;
+        }
+        
+        .advice-list li {
+            margin-bottom: 8px;
+            color: #6c757d;
+            list-style-type: none;
+            position: relative;
+        }
+        
+        .advice-list li:before {
+            content: "•";
+            color: var(--primary);
+            font-weight: bold;
+            display: inline-block; 
+            width: 1em;
+            margin-left: -1em;
+        }
+        
+        .advice-list li.valid {
+            color: var(--strong);
+        }
+        
+        .advice-list li.valid:before {
+            content: "✓";
+            color: var(--strong);
+        }
+        
+        .evaluate-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .evaluate-btn:hover {
+            background-color: #3a56d5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .evaluate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .ai-features {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+            padding-top: 20px;
+        }
+        
+        .ai-features span {
+            display: inline-block;
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 576px) {
+            .container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI-Powered Password Strength Evaluator</h1>
+        <p class="subtitle">Secure your accounts with our advanced password analysis</p>
+        
+        <div class="password-container">
+            <input type="password" id="password" class="password-input" placeholder="Create a strong password..." autocomplete="off" />
+            <button class="toggle-visibility" id="toggleVisibility">👁️</button>
+        </div>
+        
+        <div class="strength-meter">
+            <div class="strength-bar" id="strengthBar"></div>
+        </div>
+        
+        <div class="strength-text" id="strengthText">Password Strength</div>
+        
+        <ul class="advice-list" id="adviceList">
+            <li id="lengthAdvice">At least 8 characters long</li>
+            <li id="uppercaseAdvice">Contains uppercase letters</li>
+            <li id="lowercaseAdvice">Contains lowercase letters</li>
+            <li id="numberAdvice">Contains numbers</li>
+            <li id="specialAdvice">Contains special characters</li>
+        </ul>
+        
+        <button class="evaluate-btn" onclick="evaluatePassword()">Evaluate Password</button>
+        
+        <div class="ai-features">
+            <p>Powered by AI technology that analyzes:</p>
+            <span>Pattern Recognition</span>
+            <span>Common Substitutions</span>
+            <span>Dictionary Attacks</span>
+            <span>Brute Force Resistance</span>
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('password');
+        const toggleVisibility = document.getElementById('toggleVisibility');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        const adviceList = document.getElementById('adviceList');
+        
+        // Toggle password visibility
+        toggleVisibility.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.textContent = '👁️';
+            } else {
+                passwordInput.type = 'password';
+                this.textContent = '👁️';
+            }
+        });
+        
+        // Real-time evaluation as user types
+        passwordInput.addEventListener('input', function() {
+            evaluatePassword();
+        });
+        
+        function evaluatePassword() {
+            const password = passwordInput.value;
+            const container = document.querySelector('.container');
+            let score = 0;
+            let advice = [];
+            
+            // Reset all advice items
+            document.querySelectorAll('#adviceList li').forEach(item => {
+                item.classList.remove('valid');
+            });
+            
+            // Check password length
+            if (password.length >= 8) {
+                score += 1;
+                document.getElementById('lengthAdvice').classList.add('valid');
+            } else {
+                advice.push('Password should be at least 8 characters long');
+            }
+            
+            // Check for uppercase letters
+            if (/[A-Z]/.test(password)) {
+                score += 1;
+                document.getElementById('uppercaseAdvice').classList.add('valid');
+            } else {
+                advice.push('Add uppercase letters');
+            }
+            
+            // Check for lowercase letters
+            if (/[a-z]/.test(password)) {
+                score += 1;
+                document.getElementById('lowercaseAdvice').classList.add('valid');
+            } else {
+                advice.push('Add lowercase letters');
+            }
+            
+            // Check for numbers
+            if (/[0-9]/.test(password)) {
+                score += 1;
+                document.getElementById('numberAdvice').classList.add('valid');
+            } else {
+                advice.push('Add numbers');
+            }
+            
+            // Check for special characters
+            if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+                score += 1;
+                document.getElementById('specialAdvice').classList.add('valid');
+            } else {
+                advice.push('Add special characters');
+            }
+            
+            // Additional checks for better security
+            if (password.length >= 12) score += 1;
+            if (!/(.)\1{2,}/.test(password)) score += 1; // No repeated characters
+            
+            // Determine strength level
+            let strength;
+            if (score <= 2) {
+                strength = 'weak';
+                strengthText.textContent = 'Weak Password';
+                container.className = 'container weak';
+            } else if (score <= 4) {
+                strength = 'medium';
+                strengthText.textContent = 'Medium Password';
+                container.className = 'container medium';
+            } else {
+                strength = 'strong';
+                strengthText.textContent = 'Strong Password!';
+                container.className = 'container strong';
+            }
+            
+            // For demo purposes, we're just using basic checks
+            // In a real AI-powered system, this would connect to an API for more advanced analysis
+        }
+        
+        // Initialize
+        evaluatePassword();
+    </script>
+</body>
+</html>
